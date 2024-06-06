@@ -263,6 +263,7 @@ header .btn-primary { padding: 0.7rem; }
   align-items: stretch;
   gap: 2rem;
   margin-bottom: 2rem;
+  padding: 0 1.4rem;
 }
 
 .current-weather{
@@ -322,7 +323,7 @@ header .btn-primary { padding: 0.7rem; }
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  width: 40%;
+  width: 15%;
 }
 
 .current-weather-card .weather-wrapper p{
