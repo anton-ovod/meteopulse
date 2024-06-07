@@ -31,6 +31,16 @@ const forecastSection = document.querySelector("[data-5-day-forecast]");
 const carouselInner = document.querySelector('.carousel-inner');
 const carouselItems = document.querySelectorAll('.carousel-item');
 const indicators = document.querySelectorAll('.indicator');
+
+const subscribeButton = document.querySelector('.btn-primary[type="button"]');
+const dailyRadio = document.getElementById('Daily');
+const weeklyRadio = document.getElementById('Weekly');  
+const storedLocation = localStorage.getItem('lastSearchedLocation');  
+
+const dayOfWeekSelect = document.getElementById('DayOfWeek');
+
+const footerElement = document.querySelector(".footer");
+
 let currentIndex = 0;
 const interval = 3000;
 const transitionDuration = 500;
@@ -53,6 +63,10 @@ currentLocationBtn.addEventListener('click', function () {
         console.log(err);
     });
 });
+
+subscribeButton.addEventListener('click', validateForm);
+dailyRadio.addEventListener('change', toggleDayOfWeekSelect);
+weeklyRadio.addEventListener('change', toggleDayOfWeekSelect);
 
 newsletterBtn.addEventListener('click', function () {
   container.style.overflowY = "hidden";
@@ -99,7 +113,6 @@ searchField.addEventListener("input", function () {
       if (searchField.value) {
         setTimeout(() => {
           fetchData(url.geo(searchField.value), function (locations) {
-            console.log("Locations: ", locations);
             searchField.classList.remove("searching");
             searchResult.classList.add("active");
 
@@ -158,7 +171,6 @@ locationsSearchField.addEventListener("input", function () {
   if (locationsSearchField.value) {
     setTimeout(() => {
       fetchData(url.geo(locationsSearchField.value), function (locations) {
-        console.log("Fetch data callback triggered");
         locationsSearchField.classList.remove("searching");
         locationsSearchResult.classList.add("active");
         locationsSearchResult.innerHTML = `<ul class="view-list" data-locations-search-list></ul>`;
@@ -182,7 +194,6 @@ locationsSearchField.addEventListener("input", function () {
             `;
 
             searchItem.querySelector("[data-tag-toggler]").addEventListener("click", function () {
-              console.log("Search item clicked: ", name);
               addTag(name);
               locationsSearchResult.classList.remove("active");
               locationsSearchResult.innerHTML = "";
@@ -260,11 +271,13 @@ const updateWeather = function (lat, lon) {
   loading.style.display = "grid";
   container.style.overflowY = "hidden";
   container.classList.remove("fade-in");
+  footerElement.display = "none";
 
   currentWeatherSection.innerHTML = "";
   highlightSection.innerHTML = "";
   hourlySection.innerHTML = "";
   forecastSection.innerHTML = "";
+  
 
   fetchData(url.reverseGeo(lat, lon), function ([{ name }]) {
     // fetchImage(url.locationimage(name), function(object) {
@@ -276,7 +289,6 @@ const updateWeather = function (lat, lon) {
 
       // locationImageElement.onload = function() {
         fetchData(url.currentWeather(lat, lon), function (currentWeather) {
-          console.log(currentWeather);
           const {
             weather,
             dt: dateUnix,
@@ -481,51 +493,15 @@ const updateWeather = function (lat, lon) {
           loading.style.display = "none";
           container.style.overflowY = "overlay";
           container.classList.add("fade-in");
+          footerElement.display = "flex";
         });
       //};
     //});
   });
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-  const subscribeButton = document.querySelector('.btn-primary[type="button"]');
-
-  subscribeButton.addEventListener('click', validateForm);
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const subscribeButton = document.querySelector('.btn-primary[type="button"]');
-  const dailyRadio = document.getElementById('Daily');
-  const weeklyRadio = document.getElementById('Weekly');
-  const dayOfWeekSelect = document.getElementById('DayOfWeek');
-
-  subscribeButton.addEventListener('click', validateForm);
-  dailyRadio.addEventListener('change', toggleDayOfWeekSelect);
-  weeklyRadio.addEventListener('change', toggleDayOfWeekSelect);
-
-  // Initialize state based on current selection
-  toggleDayOfWeekSelect();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const subscribeButton = document.querySelector('.btn-primary[type="button"]');
-  const dailyRadio = document.getElementById('Daily');
-  const weeklyRadio = document.getElementById('Weekly');
-  const dayOfWeekSelect = document.getElementById('DayOfWeek');
-  const locationInput = document.getElementById('locations-search');
-  const addLocationButton = document.querySelector('#add-location-button'); // Assuming there's a button to add locations
-
-  subscribeButton.addEventListener('click', validateForm);
-  dailyRadio.addEventListener('change', toggleDayOfWeekSelect);
-  weeklyRadio.addEventListener('change', toggleDayOfWeekSelect);
-
-  // Initialize state based on current selection
-  toggleDayOfWeekSelect();
-});
-
 function validateForm() {
   let isValid = true;
-
   const userName = document.getElementById('user-name').value.trim();
   const userEmail = document.getElementById('user-email').value.trim();
   const frequency = document.querySelector('input[name="Frequency"]:checked');
@@ -533,7 +509,7 @@ function validateForm() {
   const timeOfDay = document.getElementById('TimeOfDay').value;
   const locationTags = Array.from(document.querySelectorAll('.locations-tags-container .tag .location-name')).map(tag => tag.textContent.trim());
   const weatherElements = Array.from(document.querySelectorAll('input[name="WeatherElements"]:checked'))
-    .map(el => el.value);
+  .map(el => el.value);
 
   if (!validateName(userName)) {
     isValid = false;
@@ -620,10 +596,7 @@ function validateName(name) {
 }
 
 function toggleDayOfWeekSelect() {
-  const dailyRadio = document.getElementById('Daily');
-  const dayOfWeekSelect = document.getElementById('DayOfWeek');
   const everydayOption = document.querySelector('#DayOfWeek option[value="Everyday"]');
-
   if (dailyRadio.checked) {
     if (!everydayOption) {
       const newEverydayOption = document.createElement('option');
@@ -638,16 +611,11 @@ function toggleDayOfWeekSelect() {
       dayOfWeekSelect.removeChild(everydayOption);
     }
     dayOfWeekSelect.disabled = false;
-    dayOfWeekSelect.value = 'Monday'; // or any other default day
+    dayOfWeekSelect.value = "Monday";
   }
 }
 
 window.addEventListener("load", () => {
-  const storedLocation = localStorage.getItem('lastSearchedLocation');  
-  const subscribeButton = document.querySelector('.btn-primary[type="button"]');
-
-  subscribeButton.addEventListener('click', validateForm);
-
   if (storedLocation) {
       const lastSearchedLocation = JSON.parse(storedLocation);
       const { lat, lon } = lastSearchedLocation;
