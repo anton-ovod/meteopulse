@@ -5,6 +5,9 @@ import * as module from "./module.js";
 const defaultLocation = { lat: 51.1089776, lon: 17.0326689}; // Wroclaw
 
 const searchTimeoutDuration = 300;
+let currentIndex = 0;
+const interval = 3000;
+const transitionDuration = 500;
 
 const searchView = document.querySelector("[data-search-view]");
 const searchTogglers = document.querySelectorAll("[data-search-toggler]");
@@ -41,12 +44,10 @@ const dayOfWeekSelect = document.getElementById('DayOfWeek');
 
 const footerElement = document.querySelector(".footer");
 
-let currentIndex = 0;
-const interval = 3000;
-const transitionDuration = 500;
 
+// EVENT LISTENERS
 
-const addEventOnElements = function (elements, eventType, callback) {
+function addEventOnElements(elements, eventType, callback) {
   for (const element of elements) element.addEventListener(eventType, callback);
 }
 
@@ -93,7 +94,22 @@ backButton.addEventListener("click", function () {
   container.style.display = "block";
 });
 
-const toggleSearch = () => {
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (storedLocation) {
+      const lastSearchedLocation = JSON.parse(storedLocation);
+      const { lat, lon } = lastSearchedLocation;
+      updateWeather(`lat=${lat}`, `lon=${lon}`);
+  } else {
+      updateWeather(`lat=${defaultLocation.lat}`, `lon=${defaultLocation.lon}`);
+  }
+});
+
+// 
+
+// SEARCH INTEGRATION
+
+function toggleSearch(){
   searchView.classList.toggle("active");
   searchField.value = "";
   searchResult.innerHTML = "";
@@ -231,7 +247,12 @@ function addTag(name) {
   locationsTagsContainer.appendChild(tag);
 }
 
-const updateCarousel = (index) => {
+//
+
+
+//CAROUSEL HANDLERS 
+
+function updateCarousel(index){
     document.querySelector('.indicator.active').classList.remove('active');
     indicators[index % indicators.length].classList.add('active');
     
@@ -239,7 +260,7 @@ const updateCarousel = (index) => {
     carouselInner.style.transform = `translateX(-${index * 100}%)`;
 };
 
-const nextSlide = () => {
+function nextSlide(){
     currentIndex++;
     updateCarousel(currentIndex);
 
@@ -254,7 +275,7 @@ const nextSlide = () => {
     }
 };
 
-const goToSlide = (index) => {
+function goToSlide(index){
     currentIndex = index;
     updateCarousel(currentIndex);
 };
@@ -266,8 +287,11 @@ indicators.forEach((indicator, index) => {
 });
 
 setInterval(nextSlide, interval);
+//
 
-const updateWeather = function (lat, lon) {
+// MAIN FUNCTION
+
+function updateWeather(lat, lon) {
   loading.style.display = "grid";
   container.style.overflowY = "hidden";
   container.classList.remove("fade-in");
@@ -280,14 +304,14 @@ const updateWeather = function (lat, lon) {
   
 
   fetchData(url.reverseGeo(lat, lon), function ([{ name }]) {
-    // fetchImage(url.locationimage(name), function(object) {
-    //   const imageUrl = object.results[0].urls.regular;
-    //   const locationImageElement = document.createElement("img");
-    //   locationImageElement.classList.add("location-image");
-    //   locationImageElement.src = imageUrl;
-    //   locationImageElement.alt = `${name}`;
+    fetchImage(url.locationimage(name), function(object) {
+      const imageUrl = object.results[0].urls.regular;
+      const locationImageElement = document.createElement("img");
+      locationImageElement.classList.add("location-image");
+      locationImageElement.src = imageUrl;
+      locationImageElement.alt = `${name}`;
 
-      // locationImageElement.onload = function() {
+      locationImageElement.onload = function() {
         fetchData(url.currentWeather(lat, lon), function (currentWeather) {
           const {
             weather,
@@ -317,7 +341,7 @@ const updateWeather = function (lat, lon) {
               </div>
             </div>
           `;
-          //card.querySelector(".location-image").replaceWith(locationImageElement);
+          card.querySelector(".location-image").replaceWith(locationImageElement);
           currentWeatherSection.appendChild(card);
         
 
@@ -495,10 +519,14 @@ const updateWeather = function (lat, lon) {
           container.classList.add("fade-in");
           footerElement.display = "flex";
         });
-      //};
-    //});
+      };
+    });
   });
 };
+
+//
+
+// FORM VALIDATION
 
 function validateForm() {
   let isValid = true;
@@ -615,13 +643,6 @@ function toggleDayOfWeekSelect() {
   }
 }
 
-window.addEventListener("load", () => {
-  if (storedLocation) {
-      const lastSearchedLocation = JSON.parse(storedLocation);
-      const { lat, lon } = lastSearchedLocation;
-      updateWeather(`lat=${lat}`, `lon=${lon}`);
-  } else {
-      updateWeather(`lat=${defaultLocation.lat}`, `lon=${defaultLocation.lon}`);
-  }
-});
+//
+
 
